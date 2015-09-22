@@ -33,7 +33,10 @@ var article = function(id) {
   });
   button.appendTo( title );
 
-  button.append( "<div/>" );
+  button.append( "<span/>" );
+
+  var icon = $( "<span/>", { "class": "glyphicon glyphicon-menu-left article-dropdown-icon" });
+  icon.appendTo( button );
 
   // Body part of panel.
   var article = $( "<div/>", {
@@ -45,14 +48,23 @@ var article = function(id) {
   article.appendTo( panel );
 
   article.on('show.bs.collapse', function() {
+    var icon = button.find( ".article-dropdown-icon" );
+    icon.removeClass( "glyphicon-menu-left" );
+    icon.addClass( "glyphicon-menu-down" );
     requestArticle(id)
+  });
+
+  article.on('hide.bs.collapse', function() {
+    var icon = button.find( ".article-dropdown-icon" );
+    icon.removeClass( "glyphicon-menu-down" );
+    icon.addClass( "glyphicon-menu-left" );
   });
 
   var body = $( "<div/>", { "class": "panel-body" });
   body.appendTo( article );
 
   var setTitle = function( text ) {
-    button.find( "div" ).text( text );
+    button.find( "span" ).first().text( text );
   };
   panel.setTitle = setTitle;
 

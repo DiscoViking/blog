@@ -30,6 +30,7 @@ func main() {
 	// Serve static content.
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+	http.Handle("/fonts/", http.StripPrefix("/fonts/", http.FileServer(http.Dir("./fonts"))))
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)

@@ -1,8 +1,17 @@
+.body {
+  background-color: #E6E6E6;
+}
+
 .jumbotron {
   background-color: #3C029A;
   color: #FFFFFF;
 }
 
 .panel-primary>.panel-heading {
-  background-image: linear-gradient( to bottom, #7100C5 0, #3E10CE 100%);
+  background-color: #3C029A;
+  background-image: none;
+}
+
+.article-dropdown-icon {
+  float: right;
 }
