@@ -1,0 +1,8 @@
+.jumbotron {
+  background-color: #3C029A;
+  color: #FFFFFF;
+}
+
+.panel-primary>.panel-heading {
+  background-image: linear-gradient( to bottom, #7100C5 0, #3E10CE 100%);
+}
