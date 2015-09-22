@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/discoviking/blog/article"
+	"github.com/russross/blackfriday"
 )
 
 // Filesystem is a datastore which just reads articles from files.
@@ -51,7 +52,7 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 			return nil, err
 		}
 
-		body = string(buf[:n])
+		body = string(blackfriday.MarkdownCommon(buf[:n]))
 	}
 
 	return &article.Article{
