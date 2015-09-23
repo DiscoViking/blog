@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/discoviking/blog/article"
 	"github.com/russross/blackfriday"
@@ -27,6 +30,14 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 	if err != nil {
 		return nil, err
 	}
+
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return nil, err
+	}
+
+	create_time := time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec))
+	mod_time := info.ModTime()
 
 	// Open the file.
 	file, err := os.Open(name)
@@ -56,9 +67,11 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 	}
 
 	return &article.Article{
-		Id:    id,
-		Title: title,
-		Body:  body,
+		Id:         id,
+		Title:      title,
+		Body:       body,
+		DatePosted: create_time,
+		DateEdited: mod_time,
 	}, nil
 }
 
@@ -78,7 +91,7 @@ func (f *Filesystem) List() ([]*article.Article, error) {
 		return nil, err
 	}
 
-	articles := make([]*article.Article, 0, len(names))
+	articles := make(article.ArticleList, 0, len(names))
 
 	for _, name := range names {
 		a, err := f.getArticle(name, false)
@@ -87,6 +100,9 @@ func (f *Filesystem) List() ([]*article.Article, error) {
 		}
 		articles = append(articles, a)
 	}
+
+	// Sort by creation time.
+	sort.Sort(articles)
 
 	return articles, nil
 }
