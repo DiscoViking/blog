@@ -99,16 +99,49 @@ var requestArticle = function(id) {
     }
 }
 
+var createArticleBodies = function( id, bodies ) {
+  var body = $( "#" + id ).find( ".panel-body" );
+  body.html("");
+
+  var tablist = $( "<ul/>", { "class": "nav nav-tabs", "role": "tablist" });
+  var tabcontent = $( "<div/>", { "class": "tab-content" });
+  $.each( bodies, function( lang, body ) {
+    var li = $( "<li/>", { "role": "presentation" });
+    var lang_id = id + "-" + lang;
+    li.append($( "<a/>", {
+      "href": "#" + lang_id,
+      "aria-controls": lang_id,
+      "role": "tab",
+      "data-toggle": "tab",
+    }).text(lang));
+
+    var div = $( "<div/>", {
+      "role": "tabpanel",
+      "class": "tab-pane",
+      "id": lang_id,
+    }).html(body);
+
+    tablist.append(li);
+    tabcontent.append(div);
+  });
+
+  tablist.find( "li" ).first().addClass("active");
+  tabcontent.find( "div" ).first().addClass("active");
+
+  body.append(tablist);
+  body.append(tabcontent);
+}
+
 var handleMessage = function(msg) {
   console.log("Received: " + msg);
   var data = JSON.parse(msg);
   $.each(data, function(index, article) {
     if ( article.body ) {
-      a = $( "#" + article.id );
-      a.find( ".panel-body" ).html(article.body["ENG"]);
+      createArticleBodies( article.id, article.body );
     } else {
       if ( $( "#" + article.id).length == 0) {
-        a = newArticle( article.id, article.title["ENG"] );
+        var titles = $.map( article.title, function(v) { return v; } );
+        newArticle( article.id, titles.join(" | ") );
       }
     }
   });
