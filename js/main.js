@@ -1,10 +1,3 @@
-articles = [
-  "Article 4",
-  "Article 3",
-  "Article 2",
-  "Article 1",
-];
-
 // Object representing one article on the page.
 var article = function(id) {
   var panel = $( "<div/>", {
@@ -112,10 +105,10 @@ var handleMessage = function(msg) {
   $.each(data, function(index, article) {
     if ( article.body ) {
       a = $( "#" + article.id );
-      a.find( ".panel-body" ).html(article.body);
+      a.find( ".panel-body" ).html(article.body["ENG"]);
     } else {
       if ( $( "#" + article.id).length == 0) {
-        a = newArticle( article.id, article.title );
+        a = newArticle( article.id, article.title["ENG"] );
       }
     }
   });

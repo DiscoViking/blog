@@ -2,12 +2,19 @@ package article
 
 import "time"
 
+const (
+	English  Language = "ENG"
+	Japanese Language = "JAP"
+)
+
+type Language string
+
 type Article struct {
-	Id         string    `json:"id"`
-	Title      string    `json:"title"`
-	Body       string    `json:"body,omitempty"`
-	DatePosted time.Time `json:"posted"`
-	DateEdited time.Time `json:"edited,omitempty"`
+	Id         string              `json:"id"`
+	Title      map[Language]string `json:"title"`
+	Body       map[Language]string `json:"body,omitempty"`
+	DatePosted time.Time           `json:"posted"`
+	DateEdited time.Time           `json:"edited,omitempty"`
 }
 
 type ArticleList []*Article
