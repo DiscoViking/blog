@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"bufio"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,8 +16,8 @@ import (
 
 var (
 	languages = map[string]article.Language{
-		"eng": article.English,
-		"jap": article.Japanese,
+		".eng": article.English,
+		".jap": article.Japanese,
 	}
 )
 
@@ -42,6 +43,8 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 	titles := make(map[article.Language]string, len(files))
 	bodies := make(map[article.Language]string, len(files))
 
+	log.Print("Loading files %v", files)
+
 	for _, name := range files {
 		// Check the file exists, and also gets us its length.
 		info, err := os.Stat(name)
@@ -65,9 +68,13 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 
 		// Work out the language from the file extension.
 		ext := filepath.Ext(name)
+		log.Print("File extension:", ext)
 		lang, ok := languages[ext]
 		if !ok {
+			log.Print("Defaulting language to ENG")
 			lang = article.English
+		} else {
+			log.Print("Found language:", lang)
 		}
 
 		// Open the file.
