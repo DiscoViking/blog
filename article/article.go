@@ -4,7 +4,7 @@ import "time"
 
 const (
 	English  Language = "ENG"
-	Japanese Language = "JAP"
+	Japanese Language = "日本語"
 )
 
 type Language string
