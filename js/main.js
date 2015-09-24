@@ -26,10 +26,10 @@ var article = function(id) {
   });
   button.appendTo( title );
 
-  button.append( "<span/>" );
-
   var icon = $( "<span/>", { "class": "glyphicon glyphicon-menu-left article-dropdown-icon" });
   icon.appendTo( button );
+
+  button.append( "<span/>" );
 
   // Body part of panel.
   var article = $( "<div/>", {
@@ -57,7 +57,7 @@ var article = function(id) {
   body.appendTo( article );
 
   var setTitle = function( text ) {
-    button.find( "span" ).first().text( text );
+    button.find( "span" ).last().text( text );
   };
   panel.setTitle = setTitle;
 
