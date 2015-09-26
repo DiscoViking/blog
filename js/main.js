@@ -252,6 +252,12 @@ var articleHistory = function articleHistory() {
     }
   };
 
+  var clearHistory = function clearHistory() {
+    myHistory = [];
+    saveArticleHistory();
+  }
+  obj.clear = clearHistory;
+
   var hasBeenRead = function hasBeenRead(id) {
     return (myHistory.indexOf(id) !== -1);
   };
