@@ -136,6 +136,11 @@ var createArticleBodies = function( id, bodies ) {
     "class": "permalink",
   });
   permalink.text("Link to this article.");
+  permalink.on("click", function(event) {
+    // Use our own click handler so we can do smooth insta-loads if supported.
+    event.preventDefault();
+    doPermalink(id);
+  });
 
   var linkIcon = $( "<span/>", {
     "class": "glyphicon glyphicon-link",
@@ -262,10 +267,14 @@ var mainPageBegin = function() {
   }
 }
 
+// These are to be used directly for initial page load.
 var loadMainPage = function() {
   if ( window.WebSocket && false ) {
     console.log("Websocket supported, opening connection...");
-    connection = connect("ws://localhost:8080/ws");
+    if (!connection) {
+      connection = connect("ws://localhost:8080/ws");
+    }
+
     var query = {
       "from": 0,
       "to": 0,
@@ -289,4 +298,59 @@ var loadPermalink = function( id ) {
     openArticle(id);
     $( "#" + id ).find("a").first().prop("disabled", true);
   });
+}
+
+// These are to be used after initial load for navigation.
+var doMainPage = function() {
+  if (history.pushState) {
+    // If we support history manipulation, load new content without reloading the page.
+    history.pushState({}, "Home", "/");
+    $( "#articles" ).empty();
+    loadMainPage();
+  } else {
+    // We don't support history manipulation, so just load the homepage again.
+    // This is a shame, but otherwise we would mess up the browser history.
+    window.location = "/"
+  }
+}
+
+var doPermalink = function( id ) {
+  if (history.pushState) {
+    // If we support history manipulation, load new content without reloading the page.
+    history.pushState({"article": id}, "Permalink: " + id, "?permalink=" + id);
+    $( "#articles" ).empty();
+    loadPermalink(id);
+  } else {
+    // We don't support history manipulation, so just load the homepage again.
+    // This is a shame, but otherwise we would mess up the browser history.
+    window.location = "?permalink=" + id;
+  }
+}
+
+
+/*
+ * Code that actually runs on pageload is kept here.
+ */
+$(document).ready(function() {
+  // Override click handler on home nav button.
+  $( "#nav-home" ).on("click", function(event) {
+    // Use our own click handler so we can do smooth insta-loads if supported.
+    event.preventDefault();
+    doMainPage();
+  });
+});
+
+window.onpopstate = function(event) {
+  console.log("Loading previous page with state: ", event.state);
+  if (event.state && event.state.article) {
+    // Indicates a permalink.
+    console.log("Permalink: " + event.state.article);
+    $( "#articles" ).empty();
+    loadPermalink(event.state.article);
+  } else {
+    // Must be home.
+    console.log("Home");
+    $( "#articles" ).empty();
+    loadMainPage();
+  }
 }
