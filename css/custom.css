@@ -41,6 +41,10 @@
   background-image: none;
 }
 
+.panel-title > a:focus, a:hover {
+  text-decoration: none;
+}
+
 .article-dropdown-icon {
   float: right;
 }
