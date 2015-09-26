@@ -38,3 +38,11 @@
 .article-dropdown-icon {
   float: right;
 }
+
+.permalink {
+  float: right;
+}
+
+.permalink > .glyphicon {
+  padding-right: 5px;
+}

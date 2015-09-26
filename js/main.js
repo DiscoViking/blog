@@ -132,6 +132,20 @@ var createArticleBodies = function( id, bodies ) {
 
   body.append(tablist);
   body.append(tabcontent);
+
+  // Add Permalink.
+  var permalink = $( "<a/>", {
+    "href": "?permalink=" + id,
+    "class": "permalink",
+  });
+  permalink.text("Link to this article.");
+
+  var linkIcon = $( "<span/>", {
+    "class": "glyphicon glyphicon-link",
+  });
+  permalink.prepend(linkIcon);
+
+  body.append(permalink);
 }
 
 var openArticle = function( id ) {
