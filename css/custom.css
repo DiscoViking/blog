@@ -34,15 +34,24 @@
   color: #AAAAAA ;
 }
 
+.panel-primary, .panel-default {
+  border-radius: 5px;
+  border-color: #3C029A;
+}
+
 .panel-primary>.panel-heading {
   background-color: #3C029A;
   background-image: none;
+  border-radius: 0px;
+  border-color: inherit;
 }
 
 .panel-default>.panel-heading {
   color: #3C029A;
   background-color: #FFFFFF;
   background-image: none;
+  border-radius: inherit;
+  border-color: inherit;
 }
 
 .panel-title > a:focus, a:hover {
