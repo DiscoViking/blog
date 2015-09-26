@@ -379,7 +379,10 @@ var loadPermalink = function loadPermalink(id) {
   requestArticle(id, function permalinkCb() {
     // Since this is a permalink, expand the panel and lock it open.
     openArticle(id);
-    $("#" + id).find("a").first().prop("disabled", true);
+    var link = $("#" + id).find("a").first();
+    var text = link.text();
+    $("<span/>").text(text).insertBefore(link);
+    link.remove();
   });
 };
 
