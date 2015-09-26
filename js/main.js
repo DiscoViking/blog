@@ -12,7 +12,7 @@ var article = function article(id) {
   });
 
   // Add the right class depending on if this article has been read or not.
-  if (hasBeenRead(id)) {
+  if (userHistory.hasBeenRead(id)) {
     panel.addClass("panel-default");
   } else {
     panel.addClass("panel-primary");
@@ -61,7 +61,7 @@ var article = function article(id) {
   });
 
   articleDiv.on("shown.bs.collapse", function articleShown() {
-    markAsRead(id);
+    userHistory.markAsRead(id);
   });
 
   articleDiv.on("hide.bs.collapse", function articleHide() {
@@ -154,7 +154,7 @@ var createArticleBodies = function createArticleBodies(id, bodies) {
 };
 
 var openArticle = function openArticle(id) {
-  markAsRead(id);
+  userHistory.markAsRead(id);
   $("#" + id).find(".collapse").collapse("show");
 };
 
@@ -227,39 +227,44 @@ var connect = function connect(addr) {
 
 
 /*
- * Article history handling code.
+ * Article history handling module.
  */
-var loadArticleHistory = function loadArticleHistory() {
-  // Requires HTML 5 Web Storage.
-  if (typeof Storage !== "undefined") {
-    var history = JSON.parse(localStorage.getItem("article-history"));
-    if (history) {
-      console.log("Loaded article history from localStorage");
-      return history;
+var articleHistory = function articleHistory() {
+  var obj = {};
+  var myHistory = [];
+
+  var loadArticleHistory = function loadArticleHistory() {
+    // Requires HTML 5 Web Storage.
+    if (typeof Storage !== "undefined") {
+      myHistory = JSON.parse(localStorage.getItem("article-history"));
+      if (history) {
+        console.log("Loaded article history from localStorage");
+      }
+    } else {
+      console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
     }
-  } else {
-    console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
-  }
+  };
 
-  return [];
-};
+  var saveArticleHistory = function saveArticleHistory() {
+    // Requires HTML 5 Web Storage.
+    if (typeof Storage !== "undefined") {
+      localStorage.setItem("article-history", JSON.stringify(myHistory));
+    }
+  };
 
-var saveArticleHistory = function saveArticleHistory(history) {
-  // Requires HTML 5 Web Storage.
-  if (typeof Storage !== "undefined") {
-    localStorage.setItem("article-history", JSON.stringify(history));
-  }
-};
+  var hasBeenRead = function hasBeenRead(id) {
+    return (myHistory.indexOf(id) !== -1);
+  };
+  obj.hasBeenRead = hasBeenRead;
 
-var articleHistory = loadArticleHistory();
+  var markAsRead = function markAsRead(id) {
+    myHistory.push(id);
+    saveArticleHistory();
+  };
+  obj.markAsRead = markAsRead;
 
-var hasBeenRead = function hasBeenRead(id) {
-  return (articleHistory.indexOf(id) !== -1);
-};
-
-var markAsRead = function markAsRead(id) {
-  articleHistory.push(id);
-  saveArticleHistory(articleHistory);
+  loadArticleHistory();
+  return obj;
 };
 
 
@@ -378,3 +383,5 @@ window.onpopstate = function historyPopState(event) {
     loadMainPage();
   }
 };
+
+var userHistory = articleHistory();
