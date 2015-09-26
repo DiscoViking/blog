@@ -88,13 +88,14 @@ var article = function(id) {
   return(panel);
 }
 
+// Creates a new article panel and attaches it to the articles list.
+// Does not make it visible.  The caller must make it visible.
 var newArticle = function( id, title ) {
   var newArticle = article(id);
   newArticle.setTitle(title);
   newArticle.setBody('<div class="throbber-loader"></div>');
-  $( "#articles" ).prepend(newArticle);
   newArticle.hide();
-  newArticle.fadeIn();
+  $( "#articles" ).prepend(newArticle);
   return newArticle;
 }
 
@@ -167,7 +168,10 @@ var handleMessage = function(msg) {
     if ( $( "#" + article.id).length == 0) {
       console.log("Article doesn't exist.  Create.");
       var titles = $.map( article.title, function(v) { return v; } );
-      newArticle( article.id, titles.join(" | ") );
+
+      // Fade new articles in from the top down.
+      var fadeDelay = Math.max(20, (data.length-(index+1))) * 50
+      newArticle( article.id, titles.join(" | ") ).delay(fadeDelay).fadeIn();
     }
 
     if ( article.body ) {
