@@ -35,6 +35,12 @@
   background-image: none;
 }
 
+.panel-default>.panel-heading {
+  color: #3C029A;
+  background-color: #FFFFFF;
+  background-image: none;
+}
+
 .article-dropdown-icon {
   float: right;
 }

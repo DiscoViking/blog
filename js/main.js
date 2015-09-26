@@ -1,9 +1,20 @@
+/*
+ * UI Code.
+ */
+
 // Object representing one article on the page.
 var article = function(id) {
   var panel = $( "<div/>", {
-    "class": "panel panel-primary",
+    "class": "panel",
     "id": id
   });
+
+  // Add the right class depending on if this article has been read or not.
+  if (has_been_read(id)) {
+    panel.addClass("panel-default");
+  } else {
+    panel.addClass("panel-primary");
+  }
 
   // Heading part of panel.
   var heading = $( "<div/>", {
@@ -47,10 +58,18 @@ var article = function(id) {
     requestArticle(id)
   });
 
+  article.on('shown.bs.collapse', function() {
+    mark_as_read(id);
+  });
+
   article.on('hide.bs.collapse', function() {
     var icon = button.find( ".article-dropdown-icon" );
     icon.removeClass( "glyphicon-menu-down" );
     icon.addClass( "glyphicon-menu-left" );
+
+    // When hiding, update class to reflect read state.
+    panel.removeClass("panel-primary");
+    panel.addClass("panel-default");
   });
 
   var body = $( "<div/>", { "class": "panel-body" });
@@ -77,30 +96,6 @@ var newArticle = function( id, title ) {
   newArticle.hide();
   newArticle.fadeIn();
   return newArticle;
-}
-
-// Generic request and response code.
-var requestArticle = function(id, doAfter) {
-  if ( false ) {
-    // Use websockets.
-
-    var query = {
-      "id": id,
-      "includeBody": true,
-    };
-
-    var msg = JSON.stringify(query);
-    console.log("Sending: " + msg);
-    connection.send(msg);
-  } else {
-    // Use Ajax
-    $.get( "/article/" + id, {}, function( resp ) {
-      handleMessage(resp);
-      if ( typeof(doAfter) === 'function' ) {
-        doAfter();
-      }
-    });
-  }
 }
 
 var createArticleBodies = function( id, bodies ) {
@@ -151,9 +146,14 @@ var createArticleBodies = function( id, bodies ) {
 }
 
 var openArticle = function( id ) {
+  mark_as_read(id);
   $( "#" + id ).find(".collapse").collapse("show");
 }
 
+
+/*
+ * Generic message handling code.
+ */
 var handleMessage = function(msg) {
   console.log("Received: " + msg);
   var data = JSON.parse(msg);
@@ -172,7 +172,33 @@ var handleMessage = function(msg) {
   });
 }
 
-// Websocket code.
+var requestArticle = function(id, doAfter) {
+  if ( false ) {
+    // Use websockets.
+
+    var query = {
+      "id": id,
+      "includeBody": true,
+    };
+
+    var msg = JSON.stringify(query);
+    console.log("Sending: " + msg);
+    connection.send(msg);
+  } else {
+    // Use Ajax
+    $.get( "/article/" + id, {}, function( resp ) {
+      handleMessage(resp);
+      if ( typeof(doAfter) === 'function' ) {
+        doAfter();
+      }
+    });
+  }
+}
+
+
+/*
+ * Websocket Code.
+ */
 var connect = function( addr ) {
   var ws = new WebSocket(addr)
   ws.onopen = function() {
@@ -186,7 +212,47 @@ var connect = function( addr ) {
   return ws
 }
 
-// Page entry points
+
+/*
+ * Article history handling code.
+ */
+var load_article_history = function() {
+  // Requires HTML 5 Web Storage.
+  if (typeof(Storage) !== "undefined") {
+    var history = JSON.parse(localStorage.getItem("article-history"));
+    if (history) {
+      console.log("Loaded article history from localStorage");
+      return history;
+    }
+  } else {
+    console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
+  }
+
+  return [];
+}
+
+var save_article_history = function( history ) {
+  // Requires HTML 5 Web Storage.
+  if (typeof(Storage) !== "undefined") {
+    localStorage.setItem("article-history", JSON.stringify(history));
+  }
+}
+
+var previously_read_articles = load_article_history();
+
+var has_been_read = function( id ) {
+  return (previously_read_articles.indexOf(id) !== -1 );
+}
+
+var mark_as_read = function( id ) {
+  previously_read_articles.push(id);
+  save_article_history(previously_read_articles);
+}
+
+
+/*
+ * Page entry points
+ */
 var mainPageBegin = function() {
   var match = location.search.match(/permalink=[a-zA-Z0-9-_]+/);
   if (match) {
