@@ -275,13 +275,73 @@ var articleHistory = function articleHistory() {
 
 
 /*
+ * Browser History Handler.
+ */
+var browserHistory = function browserHistory() {
+  var obj = {};
+
+  var replaceHistory = function replaceHistory(state, name, url) {
+    if (history.pushState) {
+      state.popstate = true;
+      console.log("Replacing current history state: ", state);
+      history.replaceState(state, name, url);
+    } else {
+      console.log("History manipulation not supported.");
+    }
+  };
+  obj.replace = replaceHistory;
+
+  var pushHistory = function pushHistory(state, name, url) {
+    if (history.pushState) {
+      state.popstate = true;
+      console.log("Pushing history state: ", state);
+      history.pushState(state, name, url);
+    } else {
+      console.log("History manipulation not supported.");
+    }
+  };
+  obj.push = pushHistory;
+
+  var loadHistory = function loadHistory(state) {
+    console.log("Loading previous page with state: ", state);
+
+    // If this state wasn't created by us, ignore it.
+    // Sometimes chrome throws random blank popstate events for no reason.
+    if ((state === null) ||
+        (typeof state.popstate === "undefined")) {
+      console.log("Not defined by us. Ignore.");
+      return;
+    }
+
+    if (state.article) {
+      // Indicates a permalink.
+      console.log("Permalink: " + state.article);
+      resetPage();
+      loadPermalink(state.article);
+    } else {
+      // Must be home.
+      console.log("Home");
+      resetPage();
+      loadMainPage();
+    }
+  };
+  obj.load = loadHistory;
+
+  return obj;
+};
+
+
+/*
  * Page entry points
  */
 var mainPageBegin = function mainPageBegin() {
   var match = location.search.match(/permalink=[a-zA-Z0-9-_]+/);
   if (match) {
-    loadPermalink(match[0].split("=")[1]);
+    var id = match[0].split("=")[1];
+    historyHandler.replace({ "article": id }, "Permalink: " + id, "?permalink=" + id);
+    loadPermalink(id);
   } else {
+    historyHandler.replace({}, "Home", "/");
     loadMainPage();
   }
 };
@@ -328,8 +388,8 @@ var doMainPage = function doMainPage() {
   $("#articles").fadeOut("fast", function mainPostFade() {
     if (history.pushState) {
       // If we support history manipulation, load new content without reloading the page.
-      history.pushState({}, "Home", "/");
       resetPage();
+      historyHandler.push({}, "Home", "/");
       loadMainPage();
     } else {
       // We don"t support history manipulation, so just load the homepage again.
@@ -343,8 +403,8 @@ var doPermalink = function doPermalink(id) {
   $("#articles").fadeOut("fast", function permaPostFade() {
     if (history.pushState) {
       // If we support history manipulation, load new content without reloading the page.
-      history.pushState({ "article": id }, "Permalink: " + id, "?permalink=" + id);
       resetPage();
+      historyHandler.push({ "article": id }, "Permalink: " + id, "?permalink=" + id);
       loadPermalink(id);
     } else {
       // We don"t support history manipulation, so just load the homepage again.
@@ -375,18 +435,10 @@ $(document).ready(function documentReady() {
   mainPageBegin();
 });
 
+var historyHandler = browserHistory();
 window.onpopstate = function historyPopState(event) {
-  console.log("Loading previous page with state: ", event.state);
-  if (event.state && event.state.article) {
-    // Indicates a permalink.
-    console.log("Permalink: " + event.state.article);
-    resetPage();
-    loadPermalink(event.state.article);
-  } else {
-    // Must be home.
-    console.log("Home");
-    resetPage();
-    loadMainPage();
+  if (event.state) {
+    historyHandler.load(event.state);
   }
 };
 
