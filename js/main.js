@@ -305,7 +305,7 @@ var doMainPage = function() {
   if (history.pushState) {
     // If we support history manipulation, load new content without reloading the page.
     history.pushState({}, "Home", "/");
-    $( "#articles" ).empty();
+    resetPage();
     loadMainPage();
   } else {
     // We don't support history manipulation, so just load the homepage again.
@@ -318,13 +318,19 @@ var doPermalink = function( id ) {
   if (history.pushState) {
     // If we support history manipulation, load new content without reloading the page.
     history.pushState({"article": id}, "Permalink: " + id, "?permalink=" + id);
-    $( "#articles" ).empty();
+    resetPage();
     loadPermalink(id);
   } else {
     // We don't support history manipulation, so just load the homepage again.
     // This is a shame, but otherwise we would mess up the browser history.
     window.location = "?permalink=" + id;
   }
+}
+
+// Clears everything off the page.
+var resetPage = function() {
+  $( "#articles" ).empty();
+  $( ".navbar" ).find(".collapse").collapse("hide");
 }
 
 
@@ -345,12 +351,12 @@ window.onpopstate = function(event) {
   if (event.state && event.state.article) {
     // Indicates a permalink.
     console.log("Permalink: " + event.state.article);
-    $( "#articles" ).empty();
+    resetPage();
     loadPermalink(event.state.article);
   } else {
     // Must be home.
     console.log("Home");
-    $( "#articles" ).empty();
+    resetPage();
     loadMainPage();
   }
 }
