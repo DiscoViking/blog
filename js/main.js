@@ -302,34 +302,38 @@ var loadPermalink = function( id ) {
 
 // These are to be used after initial load for navigation.
 var doMainPage = function() {
-  if (history.pushState) {
-    // If we support history manipulation, load new content without reloading the page.
-    history.pushState({}, "Home", "/");
-    resetPage();
-    loadMainPage();
-  } else {
-    // We don't support history manipulation, so just load the homepage again.
-    // This is a shame, but otherwise we would mess up the browser history.
-    window.location = "/"
-  }
+  $( "#articles" ).fadeOut("fast", function() {
+    if (history.pushState) {
+      // If we support history manipulation, load new content without reloading the page.
+      history.pushState({}, "Home", "/");
+      resetPage();
+      loadMainPage();
+    } else {
+      // We don't support history manipulation, so just load the homepage again.
+      // This is a shame, but otherwise we would mess up the browser history.
+      window.location = "/"
+    }
+  });
 }
 
 var doPermalink = function( id ) {
-  if (history.pushState) {
-    // If we support history manipulation, load new content without reloading the page.
-    history.pushState({"article": id}, "Permalink: " + id, "?permalink=" + id);
-    resetPage();
-    loadPermalink(id);
-  } else {
-    // We don't support history manipulation, so just load the homepage again.
-    // This is a shame, but otherwise we would mess up the browser history.
-    window.location = "?permalink=" + id;
-  }
+  $( "#articles" ).fadeOut("fast", function() {
+    if (history.pushState) {
+      // If we support history manipulation, load new content without reloading the page.
+      history.pushState({"article": id}, "Permalink: " + id, "?permalink=" + id);
+      resetPage();
+      loadPermalink(id);
+    } else {
+      // We don't support history manipulation, so just load the homepage again.
+      // This is a shame, but otherwise we would mess up the browser history.
+      window.location = "?permalink=" + id;
+    }
+  });
 }
 
 // Clears everything off the page.
 var resetPage = function() {
-  $( "#articles" ).empty();
+  $( "#articles" ).empty().show();
   $( ".navbar" ).find(".collapse").collapse("hide");
 }
 
