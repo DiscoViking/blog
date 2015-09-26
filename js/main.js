@@ -218,5 +218,9 @@ var loadMainPage = function() {
 }
 
 var loadPermalink = function( id ) {
-  requestArticle(id, function() { openArticle(id); });
+  requestArticle(id, function() {
+    // Since this is a permalink, expand the panel and lock it open.
+    openArticle(id);
+    $( "#" + id ).find("a").first().prop("disabled", true);
+  });
 }
