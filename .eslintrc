@@ -1,0 +1,26 @@
+{
+    "rules": {
+        "indent": [2, 2],
+        "quotes": [2, "double"],
+        "linebreak-style": [2, "unix"],
+        "semi": [2, "always"],
+        "func-style": [2, "expression"],
+        "id-length": [1, {"min": 2, "max": 20}],
+        "newline-after-var": 0,
+        "no-use-before-define": 0,
+        "id-match": [
+          2,
+          "(^[A-Za-z]+(?:[A-Z][a-z]*)*\\d*$)|(^[A-Z]+(_[A-Z]+)*(_\\d$)*$)|(^(_|\\$)$)",
+          {"properties": false}
+        ],
+        "no-console": 0,
+        "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+    },
+    "env": {
+        "browser": true
+    },
+    "extends": ["strict/es5", "strict/browser"],
+    "globals": {
+      "$": true,
+    },
+}
