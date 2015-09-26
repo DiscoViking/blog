@@ -78,25 +78,27 @@ var newArticle = function( id, title ) {
 }
 
 // Generic request and response code.
-var requestArticle = function(id) {
-    if ( false ) {
-      // Use websockets.
+var requestArticle = function(id, doAfter) {
+  if ( false ) {
+    // Use websockets.
 
-      var query = {
-        "id": id,
-        "includeBody": true,
-      };
+    var query = {
+      "id": id,
+      "includeBody": true,
+    };
 
-      var msg = JSON.stringify(query);
-      console.log("Sending: " + msg);
-      connection.send(msg);
-    } else {
-      // Use Ajax
-
-      $.get( "/article/" + id, {}, function( resp ) {
-        handleMessage(resp);
-      });
-    }
+    var msg = JSON.stringify(query);
+    console.log("Sending: " + msg);
+    connection.send(msg);
+  } else {
+    // Use Ajax
+    $.get( "/article/" + id, {}, function( resp ) {
+      handleMessage(resp);
+      if ( typeof(doAfter) === 'function' ) {
+        doAfter();
+      }
+    });
+  }
 }
 
 var createArticleBodies = function( id, bodies ) {
@@ -132,17 +134,24 @@ var createArticleBodies = function( id, bodies ) {
   body.append(tabcontent);
 }
 
+var openArticle = function( id ) {
+  $( "#" + id ).find(".collapse").collapse("show");
+}
+
 var handleMessage = function(msg) {
   console.log("Received: " + msg);
   var data = JSON.parse(msg);
   $.each(data, function(index, article) {
+    console.log("Data for article " + article.id);
+    if ( $( "#" + article.id).length == 0) {
+      console.log("Article doesn't exist.  Create.");
+      var titles = $.map( article.title, function(v) { return v; } );
+      newArticle( article.id, titles.join(" | ") );
+    }
+
     if ( article.body ) {
+      console.log("Body present.  Fill article contents.");
       createArticleBodies( article.id, article.body );
-    } else {
-      if ( $( "#" + article.id).length == 0) {
-        var titles = $.map( article.title, function(v) { return v; } );
-        newArticle( article.id, titles.join(" | ") );
-      }
     }
   });
 }
@@ -152,15 +161,6 @@ var connect = function( addr ) {
   var ws = new WebSocket(addr)
   ws.onopen = function() {
     console.log("Data connection open.")
-    var query = {
-      "from": 0,
-      "to": 0,
-      "includeBody": false,
-    };
-
-    var msg = JSON.stringify(query);
-    console.log("Sending: " + msg);
-    ws.send(msg);
   }
 
   ws.onmessage = function(msg) {
@@ -170,14 +170,37 @@ var connect = function( addr ) {
   return ws
 }
 
-$(document).ready(function() {
+// Page entry points
+var mainPageBegin = function() {
+  var match = location.search.match(/permalink=[a-zA-Z0-9-_]+/);
+  if (match) {
+    loadPermalink( match[0].split("=")[1] );
+  } else {
+    loadMainPage();
+  }
+}
+
+var loadMainPage = function() {
   if ( window.WebSocket && false ) {
     console.log("Websocket supported, opening connection...");
     connection = connect("ws://localhost:8080/ws");
+    var query = {
+      "from": 0,
+      "to": 0,
+      "includeBody": false,
+    };
+
+    var msg = JSON.stringify(query);
+    console.log("Sending: " + msg);
+    ws.send(msg);
   } else {
     console.log("Websocket not supported, make Ajax request for all articles");
     $.get("/article/", {}, function ( resp ) {
       handleMessage(resp);
     });
   }
-});
+}
+
+var loadPermalink = function( id ) {
+  requestArticle(id, function() { openArticle(id); });
+}
