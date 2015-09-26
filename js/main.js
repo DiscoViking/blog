@@ -170,7 +170,7 @@ var handleMessage = function(msg) {
       var titles = $.map( article.title, function(v) { return v; } );
 
       // Fade new articles in from the top down.
-      var fadeDelay = Math.max(20, (data.length-(index+1))) * 50
+      var fadeDelay = Math.min(20, (data.length-(index+1))) * 50
       newArticle( article.id, titles.join(" | ") ).delay(fadeDelay).fadeIn();
     }
 
