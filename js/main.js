@@ -74,6 +74,8 @@ var newArticle = function( id, title ) {
   newArticle.setTitle(title);
   newArticle.setBody('<div class="throbber-loader"></div>');
   $( "#articles" ).prepend(newArticle);
+  newArticle.hide();
+  newArticle.fadeIn();
   return newArticle;
 }
 
