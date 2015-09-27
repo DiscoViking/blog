@@ -4,7 +4,7 @@ go:
   - 1.3
 
 before_script:
-  - npm install eslint eslint-checker-strict eslint-plugin-filenames
+  - npm install eslint eslint-config-strict eslint-plugin-filenames
   - go get github.com/gorilla/websocket
 
 script:
