@@ -435,6 +435,12 @@ $(document).ready(function documentReady() {
     doMainPage();
   });
 
+  $("#nav-about").on("click", function navHomeClick(event) {
+    // Use our own click handler so we can do smooth insta-loads if supported.
+    event.preventDefault();
+    doPermalink("about");
+  });
+
   mainPageBegin();
 });
 

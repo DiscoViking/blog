@@ -27,12 +27,6 @@ func main() {
 			http.ServeFile(w, req, "front.html")
 		})
 
-	// Serve about page.
-	http.HandleFunc("/about",
-		func(w http.ResponseWriter, req *http.Request) {
-			http.ServeFile(w, req, "about.html")
-		})
-
 	// Serve static content.
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
