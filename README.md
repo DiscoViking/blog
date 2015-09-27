@@ -3,6 +3,7 @@ blog
 
 My personal dual-language blog.
 
+![Build Status](https://travis-ci.org/DiscoViking/blog.svg?branch=master)
 
 About
 -----
