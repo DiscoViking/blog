@@ -7,15 +7,14 @@ My personal dual-language blog.
 
 ![Build Status](https://travis-ci.org/DiscoViking/blog.svg?branch=master)
 
-About
------
-
 ## About me
-My name is Ryan, I'm a software engineer, and over the next 6 months I'm relocating to live in Tokyo.
+
+My name is Ryan, I'm a software engineer from the UK, and over the next 6 months I'm relocating to live in Tokyo.
 This blog will track my experiences throughout this period and beyond.
 The aim is for the blog to be entirely dual-language, and I will make every effort to write every post in both English and Japanese
 
 ## About the blog
+
 I'm writing the blog myself from the ground up.  The whole thing is open-source and available on [github](http://github.com/discoviking/blog).
 Why am I doing this?
 
