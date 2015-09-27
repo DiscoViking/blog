@@ -255,7 +255,7 @@ var articleHistory = function articleHistory() {
   var clearHistory = function clearHistory() {
     myHistory = [];
     saveArticleHistory();
-  }
+  };
   obj.clear = clearHistory;
 
   var hasBeenRead = function hasBeenRead(id) {
