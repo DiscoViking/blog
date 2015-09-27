@@ -4,6 +4,19 @@
  * UI Code.
  */
 
+// Function to get the value of a URI query parameter.
+var queryParam = function queryParam(name) {
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  for (var ix = 0; ix < vars.length; ix++) {
+    var pair = vars[ix].split("=");
+    if (decodeURIComponent(pair[0]) === name) {
+      return decodeURIComponent(pair[1]);
+    }
+  }
+  return null;
+};
+
 // Object representing one article on the page.
 var article = function article(id) {
   var panel = $("<div/>", {
@@ -335,11 +348,12 @@ var browserHistory = function browserHistory() {
  * Page entry points
  */
 var mainPageBegin = function mainPageBegin() {
-  var match = location.search.match(/permalink=[a-zA-Z0-9-_]+/);
-  if (match) {
-    var id = match[0].split("=")[1];
-    historyHandler.replace({ "article": id }, "Permalink: " + id, "?permalink=" + id);
-    loadPermalink(id);
+  var permalink = queryParam("permalink");
+  if (permalink) {
+    historyHandler.replace({ "article": permalink },
+                           "Permalink: " + permalink,
+                           "?permalink=" + permalink);
+    loadPermalink(permalink);
   } else {
     historyHandler.replace({}, "Home", "/");
     loadMainPage();
