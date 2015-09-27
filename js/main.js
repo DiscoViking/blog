@@ -250,8 +250,11 @@ var articleHistory = function articleHistory() {
     // Requires HTML 5 Web Storage.
     if (typeof Storage !== "undefined") {
       myHistory = JSON.parse(localStorage.getItem("article-history"));
-      if (history) {
+      if (myHistory) {
         console.log("Loaded article history from localStorage");
+      } else {
+        console.log("No saved history.");
+        myHistory = [];
       }
     } else {
       console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
