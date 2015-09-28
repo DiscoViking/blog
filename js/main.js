@@ -1,8 +1,185 @@
 "use strict";
 
-/*
- * UI Code.
+/**
+ * Generic message handling module.
+ * Will either use websockets or Ajax to contact the server.  This choice
+ * is transparent to the calling code.
  */
+var serverConnection = function serverConnection() {
+  var obj = {};
+  var ws = null;
+  var wsFailures = 0;
+  var wsMaxFailures = 5;
+  var cbStack = [];
+
+  var createWebsocket = function createWebsocket() {
+    var url = "ws://" + window.location.host + "/ws";
+    ws = new WebSocket(url);
+    ws.onopen = function wsOpen() {
+      console.log("Data connection open.");
+      wsFailures = 0;
+    };
+
+    ws.onmessage = function wsMessage(msg) {
+      var cb = cbStack.pop();
+      cb(msg.data);
+    };
+
+    ws.onclose = function wsClose() {
+      if (wsFailures < wsMaxFailures) {
+        console.log("Websocket connection lost.  Retry in 1s.");
+        setTimeout(createWebsocket, 1000);
+        wsFailures += 1;
+      } else {
+        console.log("Websocket connection failed " + wsFailures +
+                    "times. Giving up.");
+      }
+    };
+  };
+
+  var loadArticleList = function loadArticleList(cb) {
+    if ((ws) && (ws.readyState === window.WebSocket.OPEN)) {
+      console.log("Websocket ready and open.");
+      cbStack.push(cb);
+      ws.send("{}");
+    } else {
+      $.get("/article", {}, function loadListCb(resp) {
+        cb(resp);
+      });
+    }
+  };
+  obj.loadArticleList = loadArticleList;
+
+  var loadArticle = function loadArticle(id, cb) {
+    if ((ws) && (ws.readyState === window.WebSocket.OPEN)) {
+      console.log("Websocket ready and open.");
+      var query = {
+        "id": id,
+        "includeBody": true,
+      };
+      cbStack.push(cb);
+      ws.send(JSON.stringify(query));
+    } else {
+      $.get("/article/" + id, {}, function loadListCb(resp) {
+        cb(resp);
+      });
+    }
+  };
+  obj.loadArticle = loadArticle;
+
+  if (typeof window.WebSocket === "function") {
+    console.log("Websockets supported.");
+    createWebsocket();
+  }
+
+  return obj;
+};
+
+/**
+ * Browser History Handler.
+ */
+var browserHistory = function browserHistory() {
+  var obj = {};
+
+  var replaceHistory = function replaceHistory(state, name, url) {
+    if (history.pushState) {
+      state.popstate = true;
+      console.log("Replacing current history state: ", state);
+      history.replaceState(state, name, url);
+    } else {
+      console.log("History manipulation not supported.");
+    }
+  };
+  obj.replace = replaceHistory;
+
+  var pushHistory = function pushHistory(state, name, url) {
+    if (history.pushState) {
+      state.popstate = true;
+      console.log("Pushing history state: ", state);
+      history.pushState(state, name, url);
+    } else {
+      console.log("History manipulation not supported.");
+    }
+  };
+  obj.push = pushHistory;
+
+  var loadHistory = function loadHistory(state) {
+    console.log("Loading previous page with state: ", state);
+
+    // If this state wasn't created by us, ignore it.
+    // Sometimes chrome throws random blank popstate events for no reason.
+    if ((state === null) ||
+        (typeof state.popstate === "undefined")) {
+      console.log("Not defined by us. Ignore.");
+      return;
+    }
+
+    if (state.article) {
+      // Indicates a permalink.
+      console.log("Permalink: " + state.article);
+      resetPage();
+      loadPermalink(state.article);
+    } else {
+      // Must be home.
+      console.log("Home");
+      resetPage();
+      loadMainPage();
+    }
+  };
+  obj.load = loadHistory;
+
+  return obj;
+};
+
+/**
+ * Article history handling module.
+ */
+var articleHistory = function articleHistory() {
+  var obj = {};
+  var myHistory = [];
+
+  var loadArticleHistory = function loadArticleHistory() {
+    // Requires HTML 5 Web Storage.
+    if (typeof Storage !== "undefined") {
+      myHistory = JSON.parse(localStorage.getItem("article-history"));
+      if (myHistory) {
+        console.log("Loaded article history from localStorage");
+      } else {
+        console.log("No saved history.");
+        myHistory = [];
+      }
+    } else {
+      console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
+    }
+  };
+
+  var saveArticleHistory = function saveArticleHistory() {
+    // Requires HTML 5 Web Storage.
+    if (typeof Storage !== "undefined") {
+      localStorage.setItem("article-history", JSON.stringify(myHistory));
+    }
+  };
+
+  var clearHistory = function clearHistory() {
+    myHistory = [];
+    saveArticleHistory();
+  };
+  obj.clear = clearHistory;
+
+  var hasBeenRead = function hasBeenRead(id) {
+    return (myHistory.indexOf(id) !== -1);
+  };
+  obj.hasBeenRead = hasBeenRead;
+
+  var markAsRead = function markAsRead(id) {
+    myHistory.push(id);
+    saveArticleHistory();
+  };
+  obj.markAsRead = markAsRead;
+
+  loadArticleHistory();
+  return obj;
+};
 
 // Function to get the value of a URI query parameter.
 var queryParam = function queryParam(name) {
@@ -16,6 +193,10 @@ var queryParam = function queryParam(name) {
   }
   return null;
 };
+
+/*
+ * UI Code.
+ */
 
 // Object representing one article on the page.
 var article = function article(id) {
@@ -70,7 +251,9 @@ var article = function article(id) {
     var glyphicon = button.find(".article-dropdown-icon");
     glyphicon.removeClass("glyphicon-menu-left");
     glyphicon.addClass("glyphicon-menu-down");
-    requestArticle(id);
+    serverHandler.loadArticle(id, function loadArticleCb(data) {
+      handleMessage(data);
+    });
   });
 
   articleDiv.on("shown.bs.collapse", function articleShown() {
@@ -171,10 +354,6 @@ var openArticle = function openArticle(id) {
   $("#" + id).find(".collapse").collapse("show");
 };
 
-
-/*
- * Generic message handling code.
- */
 var handleMessage = function handleMessage(msg) {
   console.log("Received: " + msg);
   var data = JSON.parse(msg);
@@ -196,157 +375,6 @@ var handleMessage = function handleMessage(msg) {
   });
 };
 
-var requestArticle = function requestArticle(id, doAfter) {
-  /*eslint-disable*/
-  if (false) {
-    // Use websockets.
-
-    var query = {
-      "id": id,
-      "includeBody": true,
-    };
-
-    var msg = JSON.stringify(query);
-    console.log("Sending: " + msg);
-    connection.send(msg);
-  /*eslint-enable*/
-  } else {
-    // Use Ajax
-    $.get("/article/" + id, {}, function getArticleCb(resp) {
-      handleMessage(resp);
-      if (typeof doAfter === "function") {
-        doAfter();
-      }
-    });
-  }
-};
-
-
-/*
- * Websocket Code.
- */
-var connect = function connect(addr) {
-  var ws = new WebSocket(addr);
-  ws.onopen = function wsOpen() {
-    console.log("Data connection open.");
-  };
-
-  ws.onmessage = function wsMessage(msg) {
-    handleMessage(msg.data);
-  };
-
-  return ws;
-};
-
-
-/*
- * Article history handling module.
- */
-var articleHistory = function articleHistory() {
-  var obj = {};
-  var myHistory = [];
-
-  var loadArticleHistory = function loadArticleHistory() {
-    // Requires HTML 5 Web Storage.
-    if (typeof Storage !== "undefined") {
-      myHistory = JSON.parse(localStorage.getItem("article-history"));
-      if (myHistory) {
-        console.log("Loaded article history from localStorage");
-      } else {
-        console.log("No saved history.");
-        myHistory = [];
-      }
-    } else {
-      console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
-    }
-  };
-
-  var saveArticleHistory = function saveArticleHistory() {
-    // Requires HTML 5 Web Storage.
-    if (typeof Storage !== "undefined") {
-      localStorage.setItem("article-history", JSON.stringify(myHistory));
-    }
-  };
-
-  var clearHistory = function clearHistory() {
-    myHistory = [];
-    saveArticleHistory();
-  };
-  obj.clear = clearHistory;
-
-  var hasBeenRead = function hasBeenRead(id) {
-    return (myHistory.indexOf(id) !== -1);
-  };
-  obj.hasBeenRead = hasBeenRead;
-
-  var markAsRead = function markAsRead(id) {
-    myHistory.push(id);
-    saveArticleHistory();
-  };
-  obj.markAsRead = markAsRead;
-
-  loadArticleHistory();
-  return obj;
-};
-
-
-/*
- * Browser History Handler.
- */
-var browserHistory = function browserHistory() {
-  var obj = {};
-
-  var replaceHistory = function replaceHistory(state, name, url) {
-    if (history.pushState) {
-      state.popstate = true;
-      console.log("Replacing current history state: ", state);
-      history.replaceState(state, name, url);
-    } else {
-      console.log("History manipulation not supported.");
-    }
-  };
-  obj.replace = replaceHistory;
-
-  var pushHistory = function pushHistory(state, name, url) {
-    if (history.pushState) {
-      state.popstate = true;
-      console.log("Pushing history state: ", state);
-      history.pushState(state, name, url);
-    } else {
-      console.log("History manipulation not supported.");
-    }
-  };
-  obj.push = pushHistory;
-
-  var loadHistory = function loadHistory(state) {
-    console.log("Loading previous page with state: ", state);
-
-    // If this state wasn't created by us, ignore it.
-    // Sometimes chrome throws random blank popstate events for no reason.
-    if ((state === null) ||
-        (typeof state.popstate === "undefined")) {
-      console.log("Not defined by us. Ignore.");
-      return;
-    }
-
-    if (state.article) {
-      // Indicates a permalink.
-      console.log("Permalink: " + state.article);
-      resetPage();
-      loadPermalink(state.article);
-    } else {
-      // Must be home.
-      console.log("Home");
-      resetPage();
-      loadMainPage();
-    }
-  };
-  obj.load = loadHistory;
-
-  return obj;
-};
-
-
 /*
  * Page entry points
  */
@@ -365,36 +393,15 @@ var mainPageBegin = function mainPageBegin() {
 
 // These are to be used directly for initial page load.
 var loadMainPage = function loadMainPage() {
-  if (window.WebSocket && false) {
-    console.log("Websocket supported, opening connection...");
-    if (typeof connection === "undefined") {
-      /*eslint-disable*/
-      connection = connect("ws://localhost:8080/ws");
-      /*eslint-enable*/
-    }
-
-    var query = {
-      "from": 0,
-      "to": 0,
-      "includeBody": false,
-    };
-
-    var msg = JSON.stringify(query);
-    console.log("Sending: " + msg);
-    /*eslint-disable*/
-    connection.send(msg);
-    /*eslint-enable*/
-  } else {
-    console.log("Websocket not supported, make Ajax request for all articles");
-    $.get("/article/", {}, function getArticleCb(resp) {
-      handleMessage(resp);
-    });
-  }
+  serverHandler.loadArticleList(function loadListCb(data) {
+    handleMessage(data);
+  });
 };
 
 var loadPermalink = function loadPermalink(id) {
-  requestArticle(id, function permalinkCb() {
+  serverHandler.loadArticle(id, function permalinkCb(data) {
     // Since this is a permalink, expand the panel and lock it open.
+    handleMessage(data);
     openArticle(id);
     var link = $("#" + id).find("a").first();
     var text = link.text();
@@ -469,3 +476,5 @@ window.onpopstate = function historyPopState(event) {
 };
 
 var userHistory = articleHistory();
+
+var serverHandler = serverConnection();
