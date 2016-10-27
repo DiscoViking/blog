@@ -6,6 +6,10 @@ go:
   - 1.7
   - master
 
+os:
+  - linux
+  - osx
+
 install:
   - go get ./...
   - . $HOME/.nvm/nvm.sh
