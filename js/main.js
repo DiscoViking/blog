@@ -12,6 +12,8 @@ var serverConnection = function serverConnection() {
   var wsMaxFailures = 5;
   var cbStack = [];
 
+  var RETRY_INTERVAL_MS = 1000;
+
   var createWebsocket = function createWebsocket() {
     var url = "ws://" + window.location.host + "/ws";
     ws = new WebSocket(url);
@@ -28,7 +30,7 @@ var serverConnection = function serverConnection() {
     ws.onclose = function wsClose() {
       if (wsFailures < wsMaxFailures) {
         console.log("Websocket connection lost.  Retry in 1s.");
-        setTimeout(createWebsocket, 1000);
+        setTimeout(createWebsocket, RETRY_INTERVAL_MS);
         wsFailures += 1;
       } else {
         console.log("Websocket connection failed " + wsFailures +
@@ -140,7 +142,9 @@ var articleHistory = function articleHistory() {
 
   var loadArticleHistory = function loadArticleHistory() {
     // Requires HTML 5 Web Storage.
-    if (typeof Storage !== "undefined") {
+    if (typeof Storage === "undefined") {
+      console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
+    } else {
       myHistory = JSON.parse(localStorage.getItem("article-history"));
       if (myHistory) {
         console.log("Loaded article history from localStorage");
@@ -148,8 +152,6 @@ var articleHistory = function articleHistory() {
         console.log("No saved history.");
         myHistory = [];
       }
-    } else {
-      console.log("HTML5 Web Storage not supported, article history will not persist across sessions");
     }
   };
 
@@ -341,9 +343,7 @@ var createArticleBodies = function createArticleBodies(id, bodies) {
     doPermalink(id);
   });
 
-  var linkIcon = $("<span/>", {
-    "class": "glyphicon glyphicon-link",
-  });
+  var linkIcon = $("<span/>", { "class": "glyphicon glyphicon-link" });
   permalink.prepend(linkIcon);
 
   body.append(permalink);
@@ -363,8 +363,11 @@ var handleMessage = function handleMessage(msg) {
       console.log("articleData doesn't exist.  Create.");
       var titles = $.map(articleData.title, function identity(val) { return val; });
 
+      var FADE_INTERVAL_MS = 50;
+      var MAX_FADE_STAGGER = 20;
+
       // Fade new articleDatas in from the top down.
-      var fadeDelay = Math.min(20, (data.length - (index + 1))) * 50;
+      var fadeDelay = Math.min(MAX_FADE_STAGGER, (data.length - (index + 1))) * FADE_INTERVAL_MS;
       newArticle(articleData.id, titles.join(" | ")).delay(fadeDelay).fadeIn();
     }
 

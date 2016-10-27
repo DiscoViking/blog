@@ -8,6 +8,7 @@
         "id-length": [1, {"min": 2, "max": 20}],
         "newline-after-var": 0,
         "no-use-before-define": 0,
+        "id-blacklist": "off",
         "id-match": [
           2,
           "(^[A-Za-z]+(?:[A-Z][a-z]*)*\\d*$)|(^[A-Z]+(_[A-Z]+)*(_\\d$)*$)|(^(_|\\$)$)",
@@ -15,6 +16,12 @@
         ],
         "no-console": 0,
         "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+        "no-magic-numbers": [
+            2,
+            {
+                "ignore": [-1, 0, 1]
+            }
+        ]
     },
     "env": {
         "browser": true
