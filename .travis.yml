@@ -6,6 +6,9 @@ go:
   - 1.7
   - master
 
+node_js:
+  - "6"
+
 before_script:
   - npm install eslint eslint-config-strict eslint-plugin-filenames
 
