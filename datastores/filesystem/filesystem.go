@@ -57,7 +57,7 @@ func (f *Filesystem) getArticle(id string, includeBody bool) (*article.Article, 
 			return nil, err
 		}
 
-		create_time := time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec))
+		create_time := getCreationTime(stat)
 		if create_time.After(last_create_time) {
 			last_create_time = create_time
 		}
